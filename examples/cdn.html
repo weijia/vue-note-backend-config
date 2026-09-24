@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BackendConfig 网页直接调用示例</title>
+
+    <!-- 1) 组件样式（从 jsDelivr CDN 加载已发布的 npm 包） -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/vue-note-backend-config/dist/style.css"
+    />
+
+    <!-- 2) 通过 import map 让浏览器原生加载 Vue（无需打包工具） -->
+    <script type="importmap">
+      {
+        "imports": {
+          "vue": "https://unpkg.com/vue@3/dist/vue.esm-browser.prod.js"
+        }
+      }
+    </script>
+
+    <style>
+      body {
+        font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 24px;
+        color: #222;
+      }
+      .open-btn {
+        height: 36px;
+        border: none;
+        border-radius: 4px;
+        padding: 0 16px;
+        background: #3b82f6;
+        color: #fff;
+        cursor: pointer;
+        font-size: 14px;
+      }
+      pre {
+        background: #f5f5f5;
+        padding: 12px;
+        border-radius: 6px;
+        overflow-x: auto;
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <h1>BackendConfig 网页直接调用</h1>
+      <button class="open-btn" @click="open = true">打开后端配置</button>
+      <h3>保存结果</h3>
+      <pre>{{ pretty }}</pre>
+      <backend-config
+        v-model:open="open"
+        v-model:backend-type="type"
+        @save="onSave"
+      ></backend-config>
+    </div>
+
+    <script type="module">
+      import { createApp, ref, computed } from 'vue'
+      import {
+        BackendConfig,
+      } from 'https://cdn.jsdelivr.net/npm/vue-note-backend-config/dist/BackendConfig.mjs'
+
+      createApp({
+        components: { BackendConfig },
+        setup() {
+          const open = ref(false)
+          const type = ref(null)
+          const config = ref({})
+          const pretty = computed(
+            () => JSON.stringify(config.value, null, 2) || '（尚未保存）',
+          )
+          function onSave(c) {
+            config.value = c
+            console.log('save', c)
+          }
+          return { open, type, pretty, onSave }
+        },
+      }).mount('#app')
+    </script>
+  </body>
+</html>

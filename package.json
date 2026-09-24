@@ -1,0 +1,66 @@
+{
+  "name": "vue-note-backend-config",
+  "version": "0.1.0",
+  "description": "A Vue 3 <BackendConfig> modal component to configure PouchDB-local / Git / WebDAV backends for a notes app. No network calls, no storage, no DB instances.",
+  "type": "module",
+  "main": "./dist/index.mjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs"
+    },
+    "./BackendConfig": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/BackendConfig.mjs"
+    },
+    "./style.css": "./dist/style.css"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": [
+    "**/*.css",
+    "**/*.vue"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "vue-tsc --noEmit",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "vue",
+    "vue3",
+    "note",
+    "backend",
+    "config",
+    "git",
+    "webdav",
+    "pouchdb",
+    "component"
+  ],
+  "author": "weijia",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/weijia/vue-note-backend-config.git"
+  },
+  "bugs": {
+    "url": "https://github.com/weijia/vue-note-backend-config/issues"
+  },
+  "homepage": "https://github.com/weijia/vue-note-backend-config#readme",
+  "peerDependencies": {
+    "vue": "^3.3.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10",
+    "@vitejs/plugin-vue": "^5.1.4",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.8",
+    "vite-plugin-dts": "^4.2.3",
+    "vue": "^3.5.10",
+    "vue-tsc": "^2.1.6"
+  }
+}
