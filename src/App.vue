@@ -18,6 +18,7 @@
 import { ref, computed } from 'vue'
 import BackendConfig from './BackendConfig.vue'
 import type { ProviderConfig, BackendType } from './types'
+import { logDemo } from './debug'
 
 const open = ref(false)
 const type = ref<BackendType>(null)
@@ -27,8 +28,13 @@ const pretty = computed(() => JSON.stringify(config.value, null, 2) || '（尚�
 
 function onSave(c: ProviderConfig) {
   config.value = c
-  // eslint-disable-next-line no-console
-  console.log('save', c)
+  // 完整配置已渲染在页面上；控制台只输出脱敏摘要，避免密码进日志
+  const masked = {
+    ...c,
+    git: c.git ? { ...c.git, token: c.git.token ? '***' : undefined } : undefined,
+    webdav: c.webdav ? { ...c.webdav, password: '***' } : undefined,
+  }
+  logDemo.log('save', masked)
 }
 </script>
 

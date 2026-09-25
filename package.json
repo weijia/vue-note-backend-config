@@ -1,6 +1,6 @@
 {
   "name": "vue-note-backend-config",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A Vue 3 <BackendConfig> modal component to configure PouchDB-local / Git / WebDAV backends for a notes app. No network calls, no storage, no DB instances.",
   "type": "module",
   "main": "./dist/index.mjs",
@@ -62,5 +62,8 @@
     "vite-plugin-dts": "^4.2.3",
     "vue": "^3.5.10",
     "vue-tsc": "^2.1.6"
+  },
+  "dependencies": {
+    "@richard432/localstorage-logger": "^0.1.0"
   }
 }

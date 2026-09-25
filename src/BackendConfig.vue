@@ -142,6 +142,7 @@
 <script setup lang="ts">
 import { reactive, ref, computed, watch } from 'vue'
 import type { BackendType, GitConfig, WebDAVConfig, ProviderConfig } from './types'
+import { logConfig } from './debug'
 
 const props = defineProps<{
   /** Controls dialog visibility. */
@@ -177,16 +178,20 @@ function resetToDefaults() {
   Object.assign(gitForm, defaultGit())
   Object.assign(webdavForm, defaultWebdav())
   activeTab.value = props.backendType ?? null
+  logConfig.log('resetToDefaults', { activeTab: activeTab.value })
 }
 
 function loadFromSaved() {
   if (savedProvider?.git) {
     Object.assign(gitForm, defaultGit(), savedProvider.git)
     activeTab.value = 'git'
+    logConfig.log('loadFromSaved 恢复 git 配置（不含 token）', savedProvider.git.repoUrl)
   } else if (savedProvider?.webdav) {
     Object.assign(webdavForm, defaultWebdav(), savedProvider.webdav)
     activeTab.value = 'webdav'
+    logConfig.log('loadFromSaved 恢复 webdav 配置（不含密码）', savedProvider.webdav.url)
   } else {
+    logConfig.log('loadFromSaved 无历史配置，回落默认值')
     resetToDefaults()
   }
 }
@@ -225,16 +230,25 @@ const isValid = computed<boolean>(() => {
 })
 
 function selectTab(tab: BackendType) {
+  logConfig.log('emit update:backendType', tab)
   activeTab.value = tab
   emit('update:backendType', tab)
 }
 
 function close() {
+  logConfig.log('emit update:open', false)
   emit('update:open', false)
 }
 
 function onSave() {
-  if (!isValid.value) return
+  if (!isValid.value) {
+    logConfig.warn('onSave SKIP 校验未通过', {
+      activeTab: activeTab.value,
+      gitErrors: gitErrors.value,
+      webdavErrors: webdavErrors.value,
+    })
+    return
+  }
   let config: ProviderConfig = {}
   if (activeTab.value === 'git') {
     const git: GitConfig = {
@@ -254,6 +268,12 @@ function onSave() {
     config = { webdav }
   }
   savedProvider = config
+  // 注意：config 内含 token / 密码，日志只输出脱敏后的结构信息
+  logConfig.log('emit save', {
+    tab: activeTab.value,
+    git: config.git ? { repoUrl: config.git.repoUrl, branch: config.git.branch } : undefined,
+    webdav: config.webdav ? { url: config.webdav.url, username: config.webdav.username } : undefined,
+  })
   emit('save', config)
   emit('update:open', false)
 }
@@ -261,6 +281,7 @@ function onSave() {
 watch(
   () => props.backendType,
   (val) => {
+    logConfig.log('backendType prop 变化', val)
     if (props.open) activeTab.value = val
   },
 )
@@ -268,6 +289,7 @@ watch(
 watch(
   () => props.open,
   (open) => {
+    logConfig.log('open prop 变化', open)
     if (open) loadFromSaved()
     // On close we intentionally keep the field values in memory; they are
     // restored/reset when the dialog reopens. No external state is touched.
