@@ -1,15 +1,12 @@
 name: Publish to npm
 
-# 自动发布触发条件（与兄弟包一致）：
-#   1) 推送形如 v0.2.1 的 tag
-#   2) 在 GitHub 上发布 Release（published）
+# 自动发布触发条件：推送形如 v0.2.2 的 tag 时触发（仅此一种触发，
+# 避免 push:tags 与 release:published 同时触发导致重复发布冲突）。
 # 使用 npm Trusted Publisher（OIDC），无需 NPM_TOKEN 明文密钥。
 on:
   push:
     tags:
       - 'v*'
-  release:
-    types: [published]
 
 permissions:
   contents: read

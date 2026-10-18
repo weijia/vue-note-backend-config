@@ -1,6 +1,6 @@
 {
   "name": "vue-note-backend-config",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A Vue 3 <BackendConfig> modal component to configure PouchDB-local / Git / Gitee / WebDAV backends for a notes app. No network calls, no storage, no DB instances.",
   "type": "module",
   "main": "./dist/index.mjs",
