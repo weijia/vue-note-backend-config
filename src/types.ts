@@ -18,10 +18,19 @@ export interface WebDAVConfig {
   rootPath?: string
 }
 
+/** Gitee backend (zen-fs-gitee). Mounts a Gitee repo as a filesystem via REST API. */
+export interface GiteeConfig {
+  repoUrl: string
+  owner: string
+  token: string
+  branch?: string
+}
+
 export type ProviderConfig = {
   git?: GitConfig
   webdav?: WebDAVConfig
+  gitee?: GiteeConfig
 }
 
 /** Active backend selection. `null` means the built-in PouchDB-local provider. */
-export type BackendType = 'git' | 'webdav' | null
+export type BackendType = 'git' | 'webdav' | 'gitee' | null

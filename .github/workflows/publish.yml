@@ -1,9 +1,9 @@
 name: Publish to npm
 
 # 自动发布触发条件（与兄弟包一致）：
-#   1) 推送形如 v0.2.0 的 tag
+#   1) 推送形如 v0.2.1 的 tag
 #   2) 在 GitHub 上发布 Release（published）
-# 需要先在仓库 Settings → Secrets 配置 NPM_TOKEN（npm 账号的 Automation 类型 token）
+# 使用 npm Trusted Publisher（OIDC），无需 NPM_TOKEN 明文密钥。
 on:
   push:
     tags:
@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -22,7 +23,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           registry-url: https://registry.npmjs.org
 
       - name: Install dependencies
@@ -35,6 +36,4 @@ jobs:
         run: npm run build
 
       - name: Publish to npm
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public --provenance

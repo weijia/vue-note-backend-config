@@ -124,6 +124,57 @@
         </div>
       </div>
 
+      <!-- Gitee (zen-fs-gitee) -->
+      <div v-else-if="activeTab === 'gitee'" class="bc-form">
+        <div class="bc-field">
+          <label class="bc-label" for="bc-gitee-repo">仓库地址 (repoUrl)</label>
+          <input
+            id="bc-gitee-repo"
+            class="bc-input"
+            type="text"
+            v-model="giteeForm.repoUrl"
+            placeholder="https://gitee.com/owner/repo.git"
+            autocomplete="off"
+          />
+          <p v-if="giteeErrors.repoUrl" class="bc-error">{{ giteeErrors.repoUrl }}</p>
+        </div>
+        <div class="bc-field">
+          <label class="bc-label" for="bc-gitee-branch">分支 (branch)</label>
+          <input
+            id="bc-gitee-branch"
+            class="bc-input"
+            type="text"
+            v-model="giteeForm.branch"
+            placeholder="master"
+            autocomplete="off"
+          />
+        </div>
+        <div class="bc-field">
+          <label class="bc-label" for="bc-gitee-owner">Gitee 用户名 (owner)</label>
+          <input
+            id="bc-gitee-owner"
+            class="bc-input"
+            type="text"
+            v-model="giteeForm.owner"
+            placeholder="Gitee 登录名 / 组织名"
+            autocomplete="off"
+          />
+          <p v-if="giteeErrors.owner" class="bc-error">{{ giteeErrors.owner }}</p>
+        </div>
+        <div class="bc-field">
+          <label class="bc-label" for="bc-gitee-token">私人令牌 (token)</label>
+          <input
+            id="bc-gitee-token"
+            class="bc-input"
+            type="password"
+            v-model="giteeForm.token"
+            placeholder="Personal Access Token (需 repo 权限)"
+            autocomplete="off"
+          />
+          <p v-if="giteeErrors.token" class="bc-error">{{ giteeErrors.token }}</p>
+        </div>
+      </div>
+
       <footer class="bc-footer">
         <button class="bc-btn bc-btn-text" type="button" @click="close">取消</button>
         <button
@@ -141,7 +192,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, computed, watch } from 'vue'
-import type { BackendType, GitConfig, WebDAVConfig, ProviderConfig } from './types'
+import type { BackendType, GitConfig, WebDAVConfig, GiteeConfig, ProviderConfig } from './types'
 import { logConfig } from './debug'
 
 const props = defineProps<{
@@ -160,6 +211,7 @@ const emit = defineEmits<{
 const tabs: { key: BackendType; label: string }[] = [
   { key: null, label: 'PouchDB 本地' },
   { key: 'git', label: 'Git' },
+  { key: 'gitee', label: 'Gitee' },
   { key: 'webdav', label: 'WebDAV' },
 ]
 
@@ -167,9 +219,11 @@ const activeTab = ref<BackendType>(props.backendType)
 
 const defaultGit = (): GitConfig => ({ repoUrl: '', branch: 'main', token: '', localPath: 'notes' })
 const defaultWebdav = (): WebDAVConfig => ({ url: '', username: '', password: '', rootPath: '/' })
+const defaultGitee = (): GiteeConfig => ({ repoUrl: '', branch: 'master', owner: '', token: '' })
 
 const gitForm = reactive<GitConfig>(defaultGit())
 const webdavForm = reactive<WebDAVConfig>(defaultWebdav())
+const giteeForm = reactive<GiteeConfig>(defaultGitee())
 
 /** Remembered last saved config so reopening restores it; not persisted anywhere. */
 let savedProvider: ProviderConfig | null = null
@@ -177,6 +231,7 @@ let savedProvider: ProviderConfig | null = null
 function resetToDefaults() {
   Object.assign(gitForm, defaultGit())
   Object.assign(webdavForm, defaultWebdav())
+  Object.assign(giteeForm, defaultGitee())
   activeTab.value = props.backendType ?? null
   logConfig.log('resetToDefaults', { activeTab: activeTab.value })
 }
@@ -186,6 +241,10 @@ function loadFromSaved() {
     Object.assign(gitForm, defaultGit(), savedProvider.git)
     activeTab.value = 'git'
     logConfig.log('loadFromSaved 恢复 git 配置（不含 token）', savedProvider.git.repoUrl)
+  } else if (savedProvider?.gitee) {
+    Object.assign(giteeForm, defaultGitee(), savedProvider.gitee)
+    activeTab.value = 'gitee'
+    logConfig.log('loadFromSaved 恢复 gitee 配置（不含 token）', savedProvider.gitee.repoUrl)
   } else if (savedProvider?.webdav) {
     Object.assign(webdavForm, defaultWebdav(), savedProvider.webdav)
     activeTab.value = 'webdav'
@@ -223,8 +282,19 @@ const webdavErrors = computed<Record<string, string>>(() => {
   return e
 })
 
+const giteeErrors = computed<Record<string, string>>(() => {
+  const e: Record<string, string> = {}
+  const repo = giteeForm.repoUrl.trim()
+  if (!repo) e.repoUrl = '仓库地址为必填项'
+  else if (!isValidUrl(repo)) e.repoUrl = '请输入合法的 URL（需包含 http/https）'
+  if (!giteeForm.owner.trim()) e.owner = '用户名为必填项'
+  if (!giteeForm.token.trim()) e.token = '私人令牌为必填项'
+  return e
+})
+
 const isValid = computed<boolean>(() => {
   if (activeTab.value === 'git') return Object.keys(gitErrors.value).length === 0
+  if (activeTab.value === 'gitee') return Object.keys(giteeErrors.value).length === 0
   if (activeTab.value === 'webdav') return Object.keys(webdavErrors.value).length === 0
   return true
 })
@@ -258,6 +328,14 @@ function onSave() {
       localPath: (gitForm.localPath ?? '').trim() || 'notes',
     }
     config = { git }
+  } else if (activeTab.value === 'gitee') {
+    const gitee: GiteeConfig = {
+      repoUrl: giteeForm.repoUrl.trim(),
+      owner: giteeForm.owner.trim(),
+      token: giteeForm.token,
+      branch: (giteeForm.branch ?? '').trim() || 'master',
+    }
+    config = { gitee }
   } else if (activeTab.value === 'webdav') {
     const webdav: WebDAVConfig = {
       url: webdavForm.url.trim(),
@@ -272,6 +350,7 @@ function onSave() {
   logConfig.log('emit save', {
     tab: activeTab.value,
     git: config.git ? { repoUrl: config.git.repoUrl, branch: config.git.branch } : undefined,
+    gitee: config.gitee ? { repoUrl: config.gitee.repoUrl, owner: config.gitee.owner } : undefined,
     webdav: config.webdav ? { url: config.webdav.url, username: config.webdav.username } : undefined,
   })
   emit('save', config)
